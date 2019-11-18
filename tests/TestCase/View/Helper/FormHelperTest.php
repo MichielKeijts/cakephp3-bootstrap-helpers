@@ -244,7 +244,7 @@ class FormHelperTest extends TestCase {
             unset($options['_formOptions']);
         }
         $this->form->create(null, $formOptions);
-        $result = $this->form->input($fieldName, $options);
+        $result = $this->form->control($fieldName, $options);
         $assert = $this->assertHtml($expected, $result, $debug);
     }
 
@@ -318,6 +318,47 @@ class FormHelperTest extends TestCase {
 
     public function testInputSelect() {
 
+    }
+
+    public function testButtonGroup() {
+        // Basic test:
+        $expected = [
+            ['div' => [
+                'class' => 'btn-group', 'role' => 'group'
+            ]],
+            ['button' => ['class' => 'btn btn-primary', 'type' => 'submit']], '1', '/button',
+            ['button' => ['class' => 'btn btn-primary', 'type' => 'submit']], '2', '/button',
+            '/div'
+        ];
+        $this->assertHtml($expected, $this->form->buttonGroup([
+            $this->form->button('1'), $this->form->button('2')
+        ]));
+
+        // Custom attributes:
+        $expected = [
+            ['div' => [
+                'class' => 'btn-group myclass', 'role' => 'group', 'data-test' => 'mydata'
+            ]],
+            ['button' => ['class' => 'btn btn-primary', 'type' => 'submit']], '1', '/button',
+            ['button' => ['class' => 'btn btn-primary', 'type' => 'submit']], '2', '/button',
+            '/div'
+        ];
+        $this->assertHtml($expected, $this->form->buttonGroup([
+            $this->form->button('1'), $this->form->button('2')
+        ], ['class' => 'myclass', 'data-test' => 'mydata']));
+
+        // Vertical + custom attributes:
+        $expected = [
+            ['div' => [
+                'class' => 'btn-group-vertical myclass', 'role' => 'group', 'data-test' => 'mydata'
+            ]],
+            ['button' => ['class' => 'btn btn-primary', 'type' => 'submit']], '1', '/button',
+            ['button' => ['class' => 'btn btn-primary', 'type' => 'submit']], '2', '/button',
+            '/div'
+        ];
+        $this->assertHtml($expected, $this->form->buttonGroup([
+            $this->form->button('1'), $this->form->button('2')
+        ], ['class' => 'myclass', 'data-test' => 'mydata', 'vertical' => true]));
     }
 
     public function testInputRadio() {
@@ -424,7 +465,7 @@ class FormHelperTest extends TestCase {
                 'class' => 'row'
             ]],
             ['legend' => [
-                'class' => 'col-form-legend col-md-2'
+                'class' => 'col-form-label pt-0 col-md-2'
             ]],
             \Cake\Utility\Inflector::humanize($fieldName),
             '/legend',
@@ -472,7 +513,7 @@ class FormHelperTest extends TestCase {
                 'class' => 'row'
             ]],
             ['legend' => [
-                'class' => 'col-form-legend col-md-2'
+                'class' => 'col-form-label pt-0 col-md-2'
             ]],
             \Cake\Utility\Inflector::humanize($fieldName),
             '/legend',
@@ -598,11 +639,15 @@ class FormHelperTest extends TestCase {
             ['div' => [
                 'class' => 'input-group'
             ]],
+            ['div' => [
+                'class' => 'input-group-prepend'
+            ]],
             ['span' => [
-                'class' => 'input-group-addon'
+                'class' => 'input-group-text'
             ]],
             '@',
             '/span',
+            '/div',
             ['input' => [
                 'type' => 'text',
                 'class' => 'form-control',
@@ -627,11 +672,15 @@ class FormHelperTest extends TestCase {
                 'name' => $fieldName,
                 'id' => $fieldName
             ]],
+            ['div' => [
+                'class' => 'input-group-append'
+            ]],
             ['span' => [
-                'class' => 'input-group-addon'
+                'class' => 'input-group-text'
             ]],
             '.00',
             '/span',
+            '/div',
             '/div',
             '/div'
         ];
@@ -644,22 +693,30 @@ class FormHelperTest extends TestCase {
             ['div' => [
                 'class' => 'input-group'
             ]],
+            ['div' => [
+                'class' => 'input-group-prepend'
+            ]],
             ['span' => [
-                'class' => 'input-group-addon'
+                'class' => 'input-group-text'
             ]],
             '$',
             '/span',
+            '/div',
             ['input' => [
                 'type' => 'text',
                 'class' => 'form-control',
                 'name' => $fieldName,
                 'id' => $fieldName
             ]],
+            ['div' => [
+                'class' => 'input-group-append'
+            ]],
             ['span' => [
-                'class' => 'input-group-addon'
+                'class' => 'input-group-text'
             ]],
             '.00',
             '/span',
+            '/div',
             '/div',
             '/div'
         ];
@@ -673,8 +730,8 @@ class FormHelperTest extends TestCase {
             ['div' => [
                 'class' => 'input-group'
             ]],
-            ['span' => [
-                'class' => 'input-group-btn'
+            ['div' => [
+                'class' => 'input-group-prepend'
             ]],
             ['button' => [
                 'class' => 'btn btn-primary',
@@ -682,7 +739,7 @@ class FormHelperTest extends TestCase {
             ]],
             'Go!',
             '/button',
-            '/span',
+            '/div',
             ['input' => [
                 'type' => 'text',
                 'class' => 'form-control',
@@ -710,8 +767,8 @@ class FormHelperTest extends TestCase {
                 'name' => $fieldName,
                 'id' => $fieldName
             ]],
-            ['span' => [
-                'class' => 'input-group-btn'
+            ['div' => [
+                'class' => 'input-group-append'
             ]],
             ['button' => [
                 'class' => 'btn btn-primary',
@@ -719,7 +776,7 @@ class FormHelperTest extends TestCase {
             ]],
             'Go!',
             '/button',
-            '/span',
+            '/div',
             '/div',
             '/div'
         ];
@@ -739,8 +796,8 @@ class FormHelperTest extends TestCase {
                 'name' => $fieldName,
                 'id' => $fieldName
             ]],
-            ['span' => [
-                'class' => 'input-group-btn'
+            ['div' => [
+                'class' => 'input-group-append'
             ]],
             ['button' => [
                 'class' => 'btn btn-primary',
@@ -754,7 +811,7 @@ class FormHelperTest extends TestCase {
             ]],
             'GoGo!',
             '/button',
-            '/span',
+            '/div',
             '/div',
             '/div'
         ];
@@ -784,7 +841,7 @@ class FormHelperTest extends TestCase {
                 'id' => $fieldName
             ]],
             ['div' => [
-                'class' => 'input-group-btn'
+                'class' => 'input-group-append'
             ]],
             ['div' => [
                 'class' => 'btn-group',
@@ -835,7 +892,7 @@ class FormHelperTest extends TestCase {
                 'id' => $fieldName
             ]],
             ['div' => [
-                'class' => 'input-group-btn'
+                'class' => 'input-group-append'
             ]],
             ['div' => [
                 'class' => 'btn-group dropup',
@@ -876,7 +933,7 @@ class FormHelperTest extends TestCase {
         $fieldName = 'field';
         // Add a template with the help placeholder.
         $help = 'Some help text.';
-        $this->form->templates([
+        $this->form->setTemplates([
             'inputContainer' => '<div class="form-group {{type}}{{required}}">{{content}}<span>{{help}}</span></div>'
         ]);
         // Standard form
@@ -1092,7 +1149,7 @@ class FormHelperTest extends TestCase {
         $this->assertHtml($expected, $result);
 
         // Test with input()
-        $result = $this->form->input('Contact.date', ['type' => 'date']);
+        $result = $this->form->control('Contact.date', ['type' => 'date']);
         $now = strtotime('now');
         $expected = [
             ['div' => [
@@ -1264,14 +1321,17 @@ class FormHelperTest extends TestCase {
         $result = $this->form->file('Contact.picture');
         $this->assertHtml($expected, $result);
 
-        $this->form->request->data['Contact']['picture'] = [
+        $this->form->getView()->setRequest($this->form->getView()->getRequest()->withData('Contact.picture', [
             'name' => '', 'type' => '', 'tmp_name' => '',
             'error' => 4, 'size' => 0
-        ];
+        ]));
         $result = $this->form->file('Contact.picture');
         $this->assertHtml($expected, $result);
 
-        $this->form->request->data['Contact']['picture'] = 'no data should be set in value';
+        $this->form->getView()->setRequest($this->form->getView()->getRequest()->withData(
+            'Contact.picture',
+            'no data should be set in value'
+        ));
         $result = $this->form->file('Contact.picture');
         $this->assertHtml($expected, $result);
     }

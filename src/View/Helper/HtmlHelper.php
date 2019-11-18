@@ -87,11 +87,11 @@ class HtmlHelper extends \Cake\View\Helper\HtmlHelper {
 aria-valuenow="{{width}}" aria-valuemin="{{min}}" aria-valuemax="{{max}}" style="width: {{width}}%;"{{attrs}}>{{inner}}</div>',
             'progressBarInner' => '<span class="sr-only">{{width}}%</span>',
             'progressBarContainer' => '<div class="progress{{attrs.class}}"{{attrs}}>{{content}}</div>',
-
             'dropdownMenu' => '<div class="dropdown-menu{{attrs.class}}"{{attrs}}>{{content}}</div>',
             'dropdownMenuItem' => '<a href="{{url}}" class="dropdown-item{{attrs.class}}"{{attrs}}>{{content}}</a>',
             'dropdownMenuHeader' => '<h6 class="dropdown-header{{attrs.class}}"{{attrs}}>{{content}}</h6>',
-            'dropdownMenuDivider' => '<div role="separator" class="dropdown-divider{{attrs.class}}"{{attrs}}></div>'
+            'dropdownMenuDivider' => '<div role="separator" class="dropdown-divider{{attrs.class}}"{{attrs}}></div>',
+            'confirmJs' => '{{confirm}}'
         ],
         'templateClass' => 'Bootstrap\View\EnhancedStringTemplate',
         'tooltip' => [
@@ -139,7 +139,8 @@ aria-valuenow="{{width}}" aria-valuemin="{{min}}" aria-valuemax="{{max}}" style=
      * {@inheritDoc}
      */
     public function link($title, $url = null, array $options = []) {
-        return $this->_easyIcon('parent::link', 0, 2, [$title, $url, $options]);
+        list($options, $easyIcon) = $this->_easyIconOption($options);
+        return $this->_injectIcon(parent::link($title, $url, $options), $easyIcon);
     }
 
     /**
@@ -431,7 +432,6 @@ aria-valuenow="{{width}}" aria-valuemin="{{min}}" aria-valuemax="{{max}}" style=
                         $value += $attrs;
                         $url = $value['href'];
                         unset($value['href']);
-                        $url = '#';
                     }
                     else {
                         $url = '#';

@@ -48,7 +48,7 @@ Configure::write('App', [
     'wwwRoot' => WWW_ROOT
 ]);
 
-Cache::config([
+Cache::setConfig([
     '_cake_core_' => [
         'engine' => 'File',
         'prefix' => 'cake_core_',
@@ -64,5 +64,3 @@ Cache::config([
 Configure::write('debug', true);
 
 ini_set('intl.default_locale', 'en_US');
-
-Plugin::load('Search', ['path' => ROOT]);

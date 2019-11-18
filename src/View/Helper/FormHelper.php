@@ -98,7 +98,7 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
             'nestingLabel' => '{{hidden}}<label class="form-check-label{{attrs.class}}"{{attrs}}>{{input}} {{text}}</label>',
             'legend' => '<legend>{{text}}</legend>',
             'labelLegend' => '<label{{attrs}}>{{text}}</label>',
-            'labelLegendHorizontal' => '<legend class="col-form-legend {{labelColumnClass}}{{attrs.class}}"{{attrs}}>{{text}}</legend>',
+            'labelLegendHorizontal' => '<legend class="col-form-label pt-0 {{labelColumnClass}}{{attrs.class}}"{{attrs}}>{{text}}</legend>',
             'option' => '<option value="{{value}}"{{attrs}}>{{text}}</option>',
             'optgroup' => '<optgroup label="{{label}}"{{attrs}}>{{content}}</optgroup>',
             'select' => '<select name="{{name}}" class="form-control{{attrs.class}}" {{attrs}}>{{content}}</select>',
@@ -116,16 +116,17 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
             'submitContainer' => '<div class="form-group">{{content}}</div>',
             'submitContainerHorizontal' => '<div class="form-group row"><div class="{{labelColumnClass}}"></div><div class="{{inputColumnClass}}">{{content}}</div></div>',
 
-			'inputGroup' => '{{inputGroupStart}}{{input}}{{inputGroupEnd}}',
-            'inputGroupStart' => '<div class="input-group"><div class="input-group-prepend">{{prepend}}</div>',
-            'inputGroupEnd' => '<div class="input-group-append">{{append}}</div></div>',
-            'inputGroupAddons' => '<span class="input-group-text">{{content}}</span>',
-            'inputGroupButtons' => '<span class="input-group-btn">{{content}}</span>',
-            'inputGroupDropdowns' => '<div class="input-group-btn">{{content}}</div>',			
+            'inputGroup' => '{{inputGroupStart}}{{input}}{{inputGroupEnd}}',
+            'inputGroupStart' => '<div class="input-group">{{prepend}}',
+            'inputGroupEnd' => '{{append}}</div>',
+            'inputGroupAddons' => '<div class="input-group-{{type}}">{{content}}</div>',
+            'inputGroupText' => '<span class="input-group-text">{{content}}</span>',
             'helpBlock' => '<small class="help-block form-text text-muted">{{content}}</small>',
             'buttonGroup' => '<div class="btn-group{{attrs.class}}" role="group"{{attrs}}>{{content}}</div>',
+            'buttonGroupVertical' => '<div class="btn-group-vertical{{attrs.class}}" role="group"{{attrs}}>{{content}}</div>',
             'buttonToolbar' => '<div class="btn-toolbar{{attrs.class}}" role="toolbar"{{attrs}}>{{content}}</div>',
-            'fancyFileInput' => '{{fileInput}}<div class="input-group"><div class="input-group-btn">{{button}}</div>{{input}}</div>'
+            'fancyFileInput' => '{{fileInput}}<div class="input-group"><div class="input-group-btn">{{button}}</div>{{input}}</div>',
+            'confirmJs' => '{{confirm}}'
         ],
         'buttons' => [
             'type' => 'primary'
@@ -190,7 +191,7 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
                     'inputColumnClass' => $this->_getColumnClass('input'),
                     'labelColumnClass' => $this->_getColumnClass('label')
                 ];
-                if (!$that->templates($data['templateName'])) {
+                if (!$that->getTemplates($data['templateName'])) {
                     $data['templateName'] = $name;
                 }
                 return $data;
@@ -305,27 +306,28 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
      *
      * @return string The elements wrapped in a suitable HTML element.
      */
-    protected function _wrapInputGroup($addonOrButtons) {
+    protected function _wrapInputGroup($addonOrButtons, $type) {
         if ($addonOrButtons) {
-            $template = 'inputGroupButtons';
-            if (is_string($addonOrButtons)) {
-                $addonOrButtons = $this->_makeIcon($addonOrButtons);
-                if (!Matching::findTagOrAttribute(
-                        'button', ['type' => 'submit'], $addonOrButtons)) {
-                    $template = 'inputGroupAddons';
-                }
-            }
-            else {
+            if (is_array($addonOrButtons)) {
                 $addonOrButtons = implode('', $addonOrButtons);
+            } else {
+                $addonOrButtons = $this->_makeIcon($addonOrButtons);
             }
-            if (Matching::findTagOrAttribute(
-                    null, ['data-toggle' => 'dropdown'], $addonOrButtons)) {
-                $template = 'inputGroupDropdowns';
+
+            $isButton = strpos($addonOrButtons, '<button') === 0;
+            $isDropdown = strpos($addonOrButtons, 'data-toggle="dropdown"');
+            if (!$isButton && !$isDropdown) {
+                $addonOrButtons = $this->formatTemplate('inputGroupText', [
+                    'content' => $addonOrButtons
+                ]);
             }
-            $addonOrButtons = $this->formatTemplate($template, [
+
+            $addonOrButtons = $this->formatTemplate('inputGroupAddons', [
+                'type' => strtolower($type),
                 'content' => $addonOrButtons
             ]);
         }
+
         return $addonOrButtons;
     }
 
@@ -362,7 +364,7 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
      * opening `<div>` for an input group.
      */
     public function prepend($input, $prepend) {
-        $prepend = $this->_wrapInputGroup($prepend);
+        $prepend = $this->_wrapInputGroup($prepend, 'prepend');
         if ($input === null) {
             return $this->formatTemplate('inputGroupStart', ['prepend' => $prepend]);
         }
@@ -380,7 +382,7 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
      * closing `</div>` for an input group.
      */
     public function append($input, $append) {
-        $append = $this->_wrapInputGroup($append);
+        $append = $this->_wrapInputGroup($append, 'append');
         if ($input === null) {
             return $this->formatTemplate('inputGroupEnd', ['append' => $append]);
         }
@@ -445,10 +447,20 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
     public function control($fieldName, array $options = array()) {
 
         $options += [
+            'type' => null,
+            'label' => null,
+            'error' => null,
+            'required' => null,
+            'options' => null,
+            'templates' => [],
             'templateVars' => [],
-            'prepend'      => false,
-            'append'       => false,
-            'help'         => false,
+            'labelOptions' => true
+        ];
+
+        $options += [
+            'prepend'      => null,
+            'append'       => null,
+            'help'         => null,
             'inline'       => false
         ];
 
@@ -588,8 +600,8 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
      * @link http://book.cakephp.org/3.0/en/views/helpers/form.html#creating-button-elements
      */
     public function button($title, array $options = []) {
-        return $this->_easyIcon('parent::button', $title,
-                                $this->_addButtonClasses($options));
+        list($options, $easyIcon) = $this->_easyIconOption($options);
+        return $this->_injectIcon(parent::button($title, $this->_addButtonClasses($options)), $easyIcon);
     }
 
     /**
@@ -634,10 +646,11 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
             'vertical' => false,
             'templateVars' => []
         ];
+        $template = 'buttonGroup';
         if ($options['vertical']) {
-            $options = $this->addClass($options, 'btn-group-vertical');
+            $template = 'buttonGroupVertical';
         }
-        return $this->formatTemplate('buttonGroup', [
+        return $this->formatTemplate($template, [
             'content' => implode('', $buttons),
             'attrs' => $this->templater()->formatAttributes($options, ['vertical']),
             'templateVars' => $options['templateVars']
@@ -708,11 +721,11 @@ class FormHelper extends \Cake\View\Helper\FormHelper {
         }
 
         $options = $this->addClass($options, 'dropdown-toggle');
+
         return $this->buttonGroup([
             $this->button($title, $options),
             $this->Html->dropdown($menu, $ulOptions)
         ], $bGroupOptions);
-
     }
 
     /**
